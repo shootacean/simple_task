@@ -11,21 +11,72 @@ Public Class frmMain
         Private table As String = "task"
         Public id As String
         Public name As String
+        Public due As String
+        Public duration As String
+
+        Private _done As Boolean
+        Public Property done() As String
+            Set(ByVal value As String)
+                If value = "1" Then
+                    _done = True
+                Else
+                    _done = False
+                End If
+            End Set
+            Get
+                If _done Then
+                    Return "1"
+                Else
+                    Return ""
+                End If
+            End Get
+        End Property
 
         ''' <summary>
         ''' 登録SQLを生成する
         ''' </summary>
-        ''' <param name="name">タスク名</param>
         ''' <returns>String INSERT文</returns>
         ''' <remarks></remarks>
-        Public Function generateSQL_Add(ByVal name As String) As String
+        Public Function generateSQL_Add() As String
             Dim sql As New StringBuilder
             With sql
                 .Append(" insert into task ( ")
-                .Append("   name ")
+                .Append("   name, ")
+                .Append("   due, ")
+                .Append("   duration, ")
+                .Append("   done ")
                 .Append(" ) values ( ")
-                .Append("   @name ")
+                .Append("   @name, ")
+                .Append("   @due, ")
+                .Append("   @duration, ")
+                .Append("   @done ")
                 .Append(" ); ")
+            End With
+            Return sql.ToString
+        End Function
+
+        ''' <summary>
+        ''' 更新SQLを生成する
+        ''' </summary>
+        ''' <param name="id">タスクID</param>
+        ''' <returns>String INSERT文</returns>
+        ''' <remarks></remarks>
+        Public Function generateSQL_Update(ByVal id As String) As String
+            Dim sql As New StringBuilder
+            With sql
+                .Append(" update task ( ")
+                .Append("   name, ")
+                .Append("   due, ")
+                .Append("   duration, ")
+                .Append("   done ")
+                .Append(" ) values ( ")
+                .Append("   @name, ")
+                .Append("   @due, ")
+                .Append("   @duration, ")
+                .Append("   @done ")
+                .Append(" ) ")
+                .Append(" where ")
+                .Append("   id = @id ")
             End With
             Return sql.ToString
         End Function
@@ -53,7 +104,12 @@ Public Class frmMain
         Public Function generateSQL_Select() As String
             Dim s As New StringBuilder
             With s
-                .Append(" select * ")
+                .Append(" select ")
+                .Append("   done, ")
+                .Append("   id, ")      ' todo; delete
+                .Append("   name, ")
+                .Append("   due, ")
+                .Append("   duration ")
                 .Append(" from " & Me.table & " ")
                 .Append(" order by Id desc ")
             End With
@@ -81,15 +137,6 @@ Public Class frmMain
             .close()
         End With
         searchTaskList()
-    End Sub
-
-    ''' <summary>
-    ''' フォームクローズ後
-    ''' </summary>
-    ''' <param name="sender"></param>
-    ''' <param name="e"></param>
-    ''' <remarks></remarks>
-    Private Sub frmMain_FormClosed(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.FormClosed
     End Sub
 
 #End Region
@@ -156,15 +203,21 @@ Public Class frmMain
 
         Dim t As New Task
         t.name = txtTask.Text.Trim()
+        t.due = ""
+        t.duration = ""
+        t.done = ""
 
         ' パラメータを作成する
         Dim param As New Dictionary(Of String, String)
         param.Add("name", t.name)
+        param.Add("due", t.due)
+        param.Add("duration", t.duration)
+        param.Add("done", t.done)
 
         Dim s As SQLiter = SQLiter.getInstance
         With s
             .open()
-            .execute(t.generateSQL_Add(t.name), param)
+            .execute(t.generateSQL_Add(), param)
             .close()
         End With
 
@@ -180,13 +233,14 @@ Public Class frmMain
     ''' <remarks>選択されているタスクを削除する</remarks>
     Private Sub btnDelete_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnDelete.Click
 
+        ' チェック処理
         If Me.dgvTaskList.SelectedRows.Count < 1 Then
             MsgBox("削除するタスクを選択してください")
             Exit Sub
         End If
 
         Dim t As New Task
-        t.id = Me.dgvTaskList.SelectedRows.Item(0).Cells(0).Value.ToString
+        t.id = Me.dgvTaskList.SelectedRows.Item(0).Cells(1).Value.ToString
 
         ' パラメータを作成する
         Dim param As New Dictionary(Of String, String)

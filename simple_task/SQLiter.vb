@@ -56,7 +56,9 @@ Public Class SQLiter
             .Append(" create table if not exists task ( ")
             .Append("   Id INTEGER PRIMARY KEY AUTOINCREMENT, ")
             .Append("   Name TEXT, ")
-            .Append("   due TEXT ")
+            .Append("   due TEXT,  ")
+            .Append("   duration TEXT,  ")
+            .Append("   done TEXT  ")
             .Append(" ); ")
         End With
         Me.execute(sql.ToString)
